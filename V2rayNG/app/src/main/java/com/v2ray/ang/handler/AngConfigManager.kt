@@ -486,7 +486,7 @@ object AngConfigManager {
             }
             LogUtil.i(AppConfig.TAG, url)
             val userAgent = it.subscription.userAgent
-            val requestHeaders = it.subscription.requestHeaders
+            val requestHeaders = MayakDevice.withDeviceHeaders(it.subscription.requestHeaders) // Маяк: HWID для панели
             val proxyUsername = SettingsManager.getSocksUsername()
             val proxyPassword = SettingsManager.getSocksPassword()
 
@@ -623,7 +623,7 @@ object AngConfigManager {
         val subscriptions = MmkvManager.decodeSubscriptions()
         subscriptions.forEach {
             if (it.subscription.url == url) {
-                return 0
+                return 1 // Маяк: та же ссылка ещё раз — не ошибка, подписка просто обновится
             }
         }
         val uri = URI(Utils.fixIllegalUrl(url))
