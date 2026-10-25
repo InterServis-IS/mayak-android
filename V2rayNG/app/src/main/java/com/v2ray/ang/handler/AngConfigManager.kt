@@ -181,6 +181,8 @@ object AngConfigManager {
      * @param append Whether to append the configurations.
      * @return A pair containing the number of configurations and subscriptions imported.
      */
+    private val MAYAK_URL_RE = Regex("""https?://[^\s<>"']+""")
+
     fun importBatchConfig(server: String?, subid: String, append: Boolean): Pair<Int, Int> {
         return try {
             var count = parseBatchConfig(Utils.decode(server), subid, append)
@@ -194,6 +196,13 @@ object AngConfigManager {
             var countSub = parseBatchSubscription(server)
             if (countSub <= 0) {
                 countSub = parseBatchSubscription(Utils.decode(server))
+            }
+            if (count <= 0 && countSub <= 0) {
+                // Маяк: ссылку часто присылают вместе с текстом («Поделиться» из Telegram, сообщение бота) —
+                // достаём из текста все http(s)-ссылки и пробуем их как подписки
+                val urls = MAYAK_URL_RE.findAll(server.orEmpty()).map { it.value.trimEnd('.', ',', ')', '»', '"') }
+                    .distinct().joinToString("\n")
+                if (urls.isNotEmpty()) countSub = parseBatchSubscription(urls)
             }
             if (countSub > 0) {
                 updateConfigViaSubAll()
